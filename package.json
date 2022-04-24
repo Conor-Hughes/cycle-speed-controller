@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "fb-watchman": "^2.0.1",
+    "node-ssh": "^12.0.3"
+  }
+}
