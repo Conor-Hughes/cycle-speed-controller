@@ -1,5 +1,6 @@
 import math
 import time
+import os
 
 class Controller:
     def __init__(self):
@@ -33,7 +34,8 @@ class Controller:
         # Save the last_recorded time as the most recently used time:
         self.last_recorded_time = current_time
 
-        print(self.current_speed)
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print('Current speed: ' + str(self.current_speed))
 
         return self.current_speed
 
