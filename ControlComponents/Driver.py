@@ -17,7 +17,7 @@ class Driver:
         # torque, else we're adding anticlockwise torque.
         self.set_clockwise()
 
-        self.pwm = GPIO.PWM(PWM_PIN, 4000)
+        self.pwm = GPIO.PWM(PWM_PIN, 1000)
         self.pwm.start(0)
 
         self.max_voltage = 10 # The maximum voltage we can supply to our motor.

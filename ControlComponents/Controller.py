@@ -10,13 +10,15 @@ class Controller:
         self.current_speed = 0 # The speed the disc is currently going.
         self.last_recorded_time = self.get_current_time() # The time the last click was recorded at.
 
-        self.TARGET = 15 # The km/h speed that we want the disc to spin at.
+        self.TARGET = 5 # The km/h speed that we want the disc to spin at.
         self.previous_error = 0; # Save the last logged error value so we can use derivative control.
         self.sum_of_errors = 0; # Save the total value of errors to be used for integral control.
 
         # The tuned values for this PID controller:
-        self.Kp = 0.422615
-        self.Ki = 0.029689
+        #self.Kp = 0.422615
+        self.Kp = 8.922615
+        #self.Ki = 0.029689
+        self.Ki = 0.00002
         self.Kd = 0.091528
 
     # Gets the current time in milliseconds.
@@ -49,3 +51,7 @@ class Controller:
         self.previous_error = error
         self.sum_of_errors += error
         return voltage
+
+    def set_target(self, target):
+        self.TARGET = target
+        return

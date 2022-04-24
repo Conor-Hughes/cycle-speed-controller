@@ -13,18 +13,11 @@ class WebsocketClient:
 
         pass
 
+    def get_sio(self):
+        return self.sio
+
     def connect_to_wss(self):
-        self.sio.connect('http://0.0.0.0:8080')
-
-        @self.sio.event
-        def connect():
-            print("Connected to the WSS.")
-
-        @self.sio.event
-        def target_speed(data):
-            self.controller.set_target(data.target)
-
-        return
+        return self.sio.connect('http://0.0.0.0:8080')
 
     def send_measured_speed(self):
         return self.sio.emit('measured_speed', {'measured_speed': self.controller.current_speed})

@@ -32,7 +32,7 @@ def rotation_completed(channel):
     return True
 
 # Add an interrupt to calculate the speed on each rotation.
-GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=rotation_completed, bouncetime=100)
+GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=rotation_completed, bouncetime=150)
 
 # Keep the program running, as we are only relying on interrupts.
 try:
