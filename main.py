@@ -15,9 +15,14 @@ controller = Controller() # The PID controller for this.
 driver = Driver(PWM_PIN) # Handles controlling the motor attached to the Pi.
 ws_client = WebsocketClient(controller) # The websocket client to communicate with the WSS.
 
+global interrupted
+interrupted = False
+
 # Each time we measure a rotation, we know the updated speed of the disc and can adjust the error accordingly:
 # Note - we need to time this operation to ensure that it can be executed before the next interrupt occurs:
 def rotation_completed(channel):
+    global interrupted
+    interrupted = True
     # Update the current speed in the motor
     controller.update_current_speed()
 
@@ -37,6 +42,8 @@ GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=rotation_completed, b
 # Keep the program running, as we are only relying on interrupts.
 try:
     while True:
+        if not interrupted:
+            driver.set_voltage(10)
         None
 except KeyboardInterrupt:
     pass

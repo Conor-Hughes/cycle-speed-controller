@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../CycleUI/.idea/CycleUI.iml" filepath="$PROJECT_DIR$/../CycleUI/.idea/CycleUI.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/Pi.iml" filepath="$PROJECT_DIR$/.idea/Pi.iml" />
     </modules>
   </component>

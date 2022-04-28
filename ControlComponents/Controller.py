@@ -6,20 +6,21 @@ class Controller:
     def __init__(self):
         self.DISC_DIAMETER = 0.395
         self.DISC_CIRCUMFERENCE = math.pi * self.DISC_DIAMETER
+        self.NO_OF_REFERENCES = 2
 
         self.current_speed = 0 # The speed the disc is currently going.
         self.last_recorded_time = self.get_current_time() # The time the last click was recorded at.
 
-        self.TARGET = 5 # The km/h speed that we want the disc to spin at.
+        self.TARGET = 10 # The km/h speed that we want the disc to spin at.
         self.previous_error = 0; # Save the last logged error value so we can use derivative control.
         self.sum_of_errors = 0; # Save the total value of errors to be used for integral control.
 
         # The tuned values for this PID controller:
         #self.Kp = 0.422615
-        self.Kp = 8.922615
-        #self.Ki = 0.029689
-        self.Ki = 0.00002
-        self.Kd = 0.091528
+        self.Kp = 5.922615
+        self.Ki = 0.019689
+        #self.Ki = 0.00002
+        self.Kd = 0.161528
 
     # Gets the current time in milliseconds.
     def get_current_time(self):
@@ -31,7 +32,7 @@ class Controller:
         time_elapsed = current_time - self.last_recorded_time
 
         multiplier = 1 / (time_elapsed / 1000)  # Convert milliseconds to seconds.
-        self.current_speed = (self.DISC_CIRCUMFERENCE * multiplier) * 3.6  # * 3.6 converts m/s to km/h.
+        self.current_speed = ((self.DISC_CIRCUMFERENCE / self.NO_OF_REFERENCES) * multiplier) * 3.6  # * 3.6 converts m/s to km/h.
 
         # Save the last_recorded time as the most recently used time:
         self.last_recorded_time = current_time
@@ -55,3 +56,9 @@ class Controller:
     def set_target(self, target):
         self.TARGET = target
         return
+
+    def set_gain_values(self, data):
+        self.Kp = float(data['proportional'])
+        self.Ki = float(data['integral'])
+        self.Kd = float(data['derivative'])
+        return True

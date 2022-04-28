@@ -13,20 +13,9 @@ def connect(sid, environ, auth):
 def disconnect(sid):
     print('disconnect ', sid)
 
-@sio.on('target_speed')
-def set_target_speed(sid, message):
-    print(message)
-
-    # Send this target speed to the driver.
-    sio.emit('target_speed', message)
-    pass
-
-@sio.on('measured_speed')
-def send_measured_speed(sid, message):
-    print(message)
-
-    # Send this measured speed to the client.
-    sio.emit('measured_speed', message, skip_sid=sid)
+@sio.on('*')
+async def catch_all(event, sid, data):
+    await sio.emit(event, data, skip_sid=sid)
     pass
 
 if __name__ == '__main__':
