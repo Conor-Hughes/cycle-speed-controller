@@ -5,7 +5,6 @@ from ControlComponents.Controller import Controller
 from ControlComponents.Driver import Driver
 from ControlComponents.WebsocketClient import WebsocketClient
 from ControlComponents.Tuner import Tuner
-from pprint import pprint
 
 INTERRUPT_PIN = 23
 PWM_PIN = 12
@@ -19,20 +18,25 @@ driver = Driver(PWM_PIN) # Handles controlling the motor attached to the Pi.
 tuner = Tuner(driver)
 ws_client = WebsocketClient(controller, tuner=tuner) # The websocket client to communicate with the WSS.
 
-global bounce
-bouncetime = 60
+global last_recorded_interrupt
+last_recorded_interrupt = 0;
 
-def run_interrupt(channel):
-    # Check that the previous bouncetime has expired:
-    let
+global bounce
+
+def set_bouncetime(milliseconds):
+    global bounce
+    bounce = milliseconds * 1000000 # Convert to nanoseconds.
+    return bounce
+
+set_bouncetime(300)
 
 # Each time we measure a rotation, we know the updated speed of the disc and can adjust the error accordingly:
 # Note - we need to time this operation to ensure that it can be executed before the next interrupt occurs:
-def rotation_completed(channel):
+def rotation_completed():
     # We only want to run this when the tuner is currently enabled (e.g. it's running a sim.)
     if tuner.enabled:
         # Update the current speed in the motor
-        controller.update_current_speed()
+        current_speed = controller.update_current_speed()
 
         # This converts the error to a voltage input to the moto.
         voltage_output = controller.get_voltage_output()
@@ -43,12 +47,30 @@ def rotation_completed(channel):
         # Add this current speed along with the timestamp to the tuner results:
         tuner.add_result(controller.current_speed, controller.last_recorded_time / 1000)
 
+        # If the current speed is below 5km/h, we need to increase the bounce-time.
+        if current_speed < 5:
+            set_bouncetime(100)
+        elif current_speed > 17:
+            set_bouncetime(30)
+        else:
+            set_bouncetime(50)
+
     return True
 
-# Add an interrupt to calculate the speed on each rotation.
-e = GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=rotation_completed, bouncetime=0)
+def run_interrupt(channel):
+    global bounce
+    global last_recorded_interrupt
 
-pprint(vars(GPIO))
+    # Get the current time from the performance_counter and subtract the time that the interrupt was previously run:
+    now  = time.perf_counter_ns()
+
+    # If this time is less than the currently set bounce-time, don't run the interrupt:
+    if (now - last_recorded_interrupt) > bounce:
+        rotation_completed()
+        last_recorded_interrupt = now
+
+# Add an interrupt to calculate the speed on each rotation.
+e = GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=run_interrupt, bouncetime=20)
 
 # Keep the program running, as we are only relying on interrupts.
 try:

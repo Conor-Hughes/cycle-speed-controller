@@ -22,7 +22,6 @@ class WebsocketClient:
                 print('Receiving start event...')
 
                 # Set the gain values inside the controller:
-                print(type(data))
                 self.controller.set_gain_values(data)
                 self.controller.set_target(int(data['stepInput']))
 
