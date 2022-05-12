@@ -35,10 +35,21 @@ set_bouncetime(300)
 def rotation_completed():
     # We only want to run this when the tuner is currently enabled (e.g. it's running a sim.)
     if tuner.enabled:
+        previous_speed = controller.current_speed
+
         # Update the current speed in the motor
         current_speed = controller.update_current_speed()
 
-        # This converts the error to a voltage input to the moto.
+        # If the current speed is greater than double the previous speed, it's a measuring error:
+        if current_speed > (previous_speed * 3):
+            print('Resetting current speed to:')
+            print(previous_speed)
+            current_speed = previous_speed
+
+        print('Current speed')
+        print(current_speed)
+
+        # This converts the error to a voltage input to the motor.
         voltage_output = controller.get_voltage_output()
 
         # Clamp the voltage to between 0V and 10V and convert it to a duty cycle.
@@ -49,11 +60,11 @@ def rotation_completed():
 
         # If the current speed is below 5km/h, we need to increase the bounce-time.
         if current_speed < 5:
-            set_bouncetime(100)
+            set_bouncetime(200)
         elif current_speed > 17:
-            set_bouncetime(30)
-        else:
             set_bouncetime(50)
+        else:
+            set_bouncetime(70)
 
     return True
 

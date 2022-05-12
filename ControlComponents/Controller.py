@@ -12,8 +12,16 @@ class Controller:
         self.last_recorded_time = self.get_current_time() # The time the last click was recorded at.
 
         self.TARGET = 10 # The km/h speed that we want the disc to spin at.
-        self.previous_error = 0; # Save the last logged error value so we can use derivative control.
-        self.sum_of_errors = 0; # Save the total value of errors to be used for integral control.
+
+        self.time_elapsed = 0 # Equivalent to the sampling time (how long it was between the last two errors).
+
+        # Record the last 3 errors and inputs:
+        self.e0 = 0 # Current error
+        self.e1 = 0 # e^-1
+        self.e2 = 0 # e^-2
+        self.u0 = 0
+        self.u1 = 0
+        self.u2 = 0
 
         # The tuned values for this PID controller:
         #self.Kp = 0.422615
@@ -21,6 +29,7 @@ class Controller:
         self.Ki = 0.019689
         #self.Ki = 0.00002
         self.Kd = 0.161528
+        self.N = 7.709
 
     # Gets the current time in milliseconds.
     def get_current_time(self):
@@ -29,9 +38,9 @@ class Controller:
     # Update the current_speed variable on each new tick:
     def update_current_speed(self):
         current_time = self.get_current_time()
-        time_elapsed = current_time - self.last_recorded_time
+        self.time_elapsed = (current_time - self.last_recorded_time) / 1000
 
-        multiplier = 1 / (time_elapsed / 1000)  # Convert milliseconds to seconds.
+        multiplier = 1 / self.time_elapsed  # Convert milliseconds to seconds.
         self.current_speed = ((self.DISC_CIRCUMFERENCE / self.NO_OF_REFERENCES) * multiplier) * 3.6  # * 3.6 converts m/s to km/h.
 
         # Save the last_recorded time as the most recently used time:
@@ -47,11 +56,41 @@ class Controller:
 
     # Returns the voltage output as calculated by the PID controller:
     def get_voltage_output(self):
-        error = self.get_error()
-        voltage = (error * self.Kp) + (self.previous_error * self.Kd) + (self.sum_of_errors * self.Ki)
-        self.previous_error = error
-        self.sum_of_errors += error
-        return voltage
+        self.e0 = self.get_error()
+        print('Error:')
+        print(self.e0)
+
+        # Shorten these here to clean up the eqns.
+        N = self.N
+        Ki = self.Ki
+        Kp = self.Kp
+        Kd = self.Kd
+        Ts = self.time_elapsed # Get the sampling time.
+
+        # Get the constants for the equation:
+        a0 = (1 + N * Ts)
+        a1 = -(2 + (N * Ts))
+        a2 = 1
+
+        b0 = Kp * (1 + N * Ts) + (Ki * Ts) * (1 + N * Ts) + (Kd * N)
+        b1 = -(Kp * (2 + N * Ts) + Ki * Ts + 2 * Kd * N)
+        b2 = Kp + Kd * N
+
+
+        ku1 = a1 / a0
+        ku2 = a2 / a0
+        ke0 = b0 / a0
+        ke1 = b1 / a0
+        ke2 = b2 / a0
+
+        self.e2 = self.e1
+        self.e1 = self.e0
+        self.u2 = self.u1
+        self.u1 = self.u0
+
+        self.u0 = -ku1 * self.u1 - ku2 * self.u2 + ke0 * self.e0 + ke1 * self.e1 + ke2 * self.e2
+        print(self.u0)
+        return self.u0
 
     def set_target(self, target):
         self.TARGET = target
